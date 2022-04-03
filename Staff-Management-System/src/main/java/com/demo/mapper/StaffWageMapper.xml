@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.demo.mapper.StaffWageMapper">
+
+    <delete id="delStaffWage">
+        delete from stuff_info.staff_wage where UID = #{uid}
+    </delete>
+
+    <insert id="insStaff">
+        insert into stuff_info.staff_wage(WAGE_ID, UID, WAGE, MONTH, YEAR)
+        values (null,  #{uid}, #{wage}, #{month}, #{year})
+    </insert>
+</mapper>

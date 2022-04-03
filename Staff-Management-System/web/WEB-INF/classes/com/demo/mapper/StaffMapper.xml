@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.demo.mapper.StaffMapper">
+    <sql id="staff_columns">
+        select staff.U_ID, staff.U_NAME, staff.ID_CARD, staff.JOB,
+               staff.BANK_ACCOUNT, staff.BANK_INFO, staff.TELEPHONE_NUM
+    </sql>
+
+    <resultMap id="staff_wageMap" type="staff">
+        <id column="U_ID" property="uid"></id>
+        <collection property="staffWages" ofType="StaffWage">
+            <id column="WAGE_ID" property="wageId"></id>
+            <result column="WUID" property="uid"></result>
+        </collection>
+    </resultMap>
+
+    <!--查询员工信息时，带出员工工资-->
+    <select id="selStaff" resultMap="staff_wageMap">
+        <include refid="staff_columns"/> , wage.WAGE_ID, wage.UID WUID, wage.WAGE, wage.month, wage.YEAR from stuff_info.staff left join
+        stuff_info.staff_wage wage on staff.U_ID = wage.UID
+        <where>
+            <if test="bankAccount != null and bankAccount != ''">
+                <bind name="patternBankAccount" value="'%' + _parameter.getBankAccount() + '%'" />
+                BANK_ACCOUNT like #{patternBankAccount}
+            </if>
+
+            <if test="uid != null and uid != ''">
+                AND U_ID = #{uid}
+            </if>
+
+            <if test="bankInfo != null and bankInfo != ''">
+                <bind name="patternBankInfo" value="'%' + _parameter.getBankInfo() + '%'" />
+                AND BANK_INFO like #{patternBankInfo}
+            </if>
+
+            <if test="idCard != null and idCard != ''">
+                <bind name="patternIdCard" value="'%' + _parameter.getIdCard() + '%'" />
+                AND ID_CARD like #{patternIdCard}
+            </if>
+
+            <if test="job != null and job != ''">
+                <bind name="patternJob" value="'%' + _parameter.getJob() + '%'" />
+                AND JOB like #{patternJob}
+            </if>
+
+            <if test="telephoneNum != null and telephoneNum != ''">
+                <bind name="patternTelNum" value="'%' + _parameter.getTelephoneNum() + '%'" />
+                AND TELEPHONE_NUM like #{patternTelNum}
+            </if>
+
+            <if test="uname != null and uname != ''">
+                <bind name="patternUname" value="'%' + _parameter.getUname() + '%'" />
+                AND U_NAME like #{patternUname}
+            </if>
+
+        </where>
+    </select>
+
+    <select id="selStaffByUid" resultType="staff">
+        <include refid="staff_columns"/> from stuff_info.staff
+        <where>
+            U_ID = #{uid}
+        </where>
+    </select>
+
+    <select id="selStaffByIdCard" resultType="staff">
+        <include refid="staff_columns"/> from stuff_info.staff
+        <where>
+            ID_CARD = #{idCard}
+        </where>
+    </select>
+
+    <delete id="delStaff">
+        delete from stuff_info.staff where U_ID = #{uid}
+    </delete>
+
+    <update id="updStaff">
+        update stuff_info.staff
+        <set>
+            <if test="bankAccount != null and bankAccount != ''">
+                BANK_ACCOUNT = #{bankAccount},
+            </if>
+
+            <if test="bankInfo != null and bankInfo != ''">
+                BANK_INFO = #{bankInfo},
+            </if>
+
+            <if test="idCard != null and idCard != ''">
+                ID_CARD = #{idCard},
+            </if>
+
+            <if test="job != null and job != ''">
+                JOB = #{job},
+            </if>
+
+            <if test="telephoneNum != null and telephoneNum != ''">
+                TELEPHONE_NUM = #{telephoneNum},
+            </if>
+
+            <if test="uname != null and uname != ''">
+                U_NAME = #{uname},
+            </if>
+        </set>
+        where U_ID = #{uid}
+    </update>
+
+    <insert id="insStaff" useGeneratedKeys="true"
+            keyProperty="uid">
+        insert into stuff_info.staff(U_ID, U_NAME, ID_CARD, JOB, BANK_ACCOUNT, BANK_INFO, TELEPHONE_NUM)
+        values (null, #{uname}, #{idCard}, #{job}, #{bankAccount}, #{bankInfo}, #{telephoneNum})
+    </insert>
+</mapper>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <import resource="classpath:spring-dao.xml"/>
+
+    <context:component-scan base-package="com.demo"/>
+
+    <!-- 为注解了@Aspect的切面bean创建代理-->
+    <aop:aspectj-autoproxy/>
+
+    <!-- 增加声明式事务 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <!--isolation为DEFAULT时：采用数据库默认隔离级别-->
+            <!--注意：若tx:method中的方法都匹配的情况下，会使用最精确的配置，例如：selStaff会使用sel*配置，而不会使用*的那一条配置-->
+            <tx:method name="sel*" read-only="true" propagation="REQUIRED"/>
+            <tx:method name="*"/>
+        </tx:attributes>
+    </tx:advice>
+    <aop:config>
+        <aop:pointcut id="txServicePointCut" expression="within(com.demo..impl.*Impl)"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="txServicePointCut" order="1"></aop:advisor>
+    </aop:config>
+</beans>

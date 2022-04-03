@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>员工管理系统</title>
+    <style type="text/css">
+        table,tr,td{
+            border:1px solid;
+            border-collapse:collapse;
+        }
+        table{
+            width:1600px;
+            /*table-layout:fixed;*/
+        }
+        tr,td{
+            height:30px;
+        }
+        table>tbody>th>td{
+            width: 125px;
+        }
+        td{
+            text-align:center;
+        }
+    </style>
+</head>
+<body>
+    <h1 align="center">员工管理系统</h1><br>
+    <form>
+        <input type="text" name="flag" id="flag" value="selStaff" hidden="hidden"/>
+        姓名：<input type="text" name="uname" id="uname"/>&nbsp;&nbsp;
+        身份证号：<input type="text" name="idCard" id="idCard"/>&nbsp;&nbsp;
+        工种：<input type="text" name="job" id="job"/>&nbsp;&nbsp;<br>
+        银行账号：<input type="text" name="bankAccount" id="bankAccount"/>&nbsp;&nbsp;
+        开户银行：<input type="text" name="bankInfo" id="bankInfo"/>&nbsp;&nbsp;
+        电话号码：<input type="text" name="telephoneNum" id="telephoneNum"/>&nbsp;&nbsp;
+        <input type="reset" value="重置"/>&nbsp;&nbsp;
+        <input type="button" id="queryStuff" value="查询"/>
+        <!--<input type="button" id="exportExcel" value="导出员工信息"/>-->
+        <a href="/Staff_Management_System/staffServlet?flag=exportExcel">导出员工信息</a>
+    </form>
+    <hr/>
+    <table align="center" border="1">
+        <thead>
+            <tr>
+                <th rowspan="4">序号</th>
+                <th rowspan="4">姓名</th>
+                <th rowspan="4">身份证号</th>
+                <th rowspan="4">工种</th>
+                <th rowspan="4">银行账号</th>
+                <th rowspan="4">开户银行</th>
+                <th rowspan="4">电话号码</th>
+                <th rowspan="4">月份（当年合集）</th>
+                <th rowspan="4">年份</th>
+                <th rowspan="4">工资</th>
+                <th rowspan="4">操作</th>
+            </tr>
+        </thead>
+        <tbody id="staffTab">
+        </tbody>
+    </table>
+</body>
+<script type="text/javascript" src="js/jquery-1.9.1.js"></script>
+<script type="text/javascript">
+    $(function(){
+        bindEvent();
+        // 查询方法
+        $("#queryStuff").click(function (){
+            var flag = $.trim($("#flag").val());
+            var paramJson = JSON.stringify(getQueryParam());
+            // var paramJson = param;
+
+            $.ajax(
+                {
+                    url: "/Staff_Management_System/staffServlet?flag=" + flag, //访问路径
+                    type: "POST",    //访问方式
+                    // type: "GET",    //访问方式
+                    data: paramJson, // 发送到服务器的数据。将自动转换为请求字符串格式。
+                    dataType: "json",   //预期服务器返回的数据类型
+                    //processData: "true",//不希望将参数自动转换成url?filed1=val1&filed2=val2格式【达不到预期效果】
+                    // 发送信息至服务器时的内容编码，默认为：application/x-www-form-urlencoded，
+                    // 即以url?filed1=val1&filed2=val2的格式将参数拼接到url后的编码方式【注意区分，请求方式与编码格式无关】
+                    contentType: "application/json;charset=utf-8",
+                    //请求成功时的回调函数
+                    success : function(result){
+                        if (result && result.code == 200){
+                            var data = result.data;
+                            if (data && data.length > 0){
+                                parseDataWriteTab(data);
+                            } else {
+                                $("#staffTab").html("");
+                                alert("查询员工信息为空！");
+                            }
+                        } else {
+                            alert(result.message);
+                        }
+                    },
+                    //请求失败时，调用此函数
+                    error : function (xmlHttpRequest, textStatus, errorThrown) {
+                        console.info(xmlHttpRequest);
+                        console.info(textStatus);
+                        console.info(errorThrown);
+                        alert(textStatus);
+                    }
+                }
+            );
+        });
+        $("#queryStuff").click();
+    });
+
+    /*
+    * 绑定监听事件
+    */
+    var bindEvent = function (){
+        document.onkeydown = function (event) {
+            if (event && event.keyCode == 13) { //回车键的键值为13
+                $("#queryStuff").click(); //调用登录按钮的登录事件
+            }
+        }
+    }
+
+    //解析后台返回参数，并且回写表格
+    var parseDataWriteTab = function (data){
+        var allTabStr = "";
+        var i = 0;
+        $.each(data, function (index, item){
+            var tabStr = "<tr>";
+            var uid = oTos(item.uid);
+            tabStr += "<td>" + (++i) + "</td>";
+            tabStr += "<td>" + oTos(item.uname) + "</td>";
+            tabStr += "<td style='width: 200px;'>" + oTos(item.idCard) + "</td>";
+            tabStr += "<td>" + oTos(item.job) + "</td>";
+            tabStr += "<td style='width: 200px;'>" + oTos(item.bankAccount) + "</td>";
+            tabStr += "<td>" + oTos(item.bankInfo) + "</td>";
+            tabStr += "<td>" + oTos(item.telephoneNum) + "</td>";
+            tabStr += "<td>" + oTos(item.months) + "</td>";
+            tabStr += "<td>" + oTos(item.year) + "</td>";
+            tabStr += "<td>" + oTos(item.wages) + "</td>";
+            tabStr += "<td><a href='/Staff_Management_System/insOrUpdStaff.html'>新增</a>&nbsp;" +
+                "<a href='/Staff_Management_System/insOrUpdStaff.html?uid="+ uid +"'>更新</a>&nbsp;" +
+                "<a href='javascript:delStaff(" + uid + ")'>删除</a></td>&nbsp;";
+            tabStr += "</tr>";
+            allTabStr += tabStr;
+        });
+        $("#staffTab").html(allTabStr);
+    }
+
+    /**
+     * 删除职工
+     * @param uid
+     */
+    var delStaff = function (uid){
+        $.ajax({
+            "url" : "/Staff_Management_System/staffServlet?flag=delStaff",
+            "type" : "POST",
+            "data" : JSON.stringify({"uid":uid}),
+            // "data" : {"uid":uid},
+            "dataType" : "json",
+            //如果不指定为 application/json，则默认会以application/x-www-form-urlencoded编码格式编码
+            //application/x-www-form-urlencoded这个格式编码传输的数据，后端用request.getReader()读取不到
+            "contentType" : "application/json;charset=utf-8",
+            success : function(result){
+                if (result && result.code == 200){
+                    var data = result.data;
+                    $("#queryStuff").click();
+                    alert("成功删除" + data + "条员工！");
+                } else {
+                    alert(result.message);
+                }
+            },
+            //请求失败时，调用此函数
+            error : function (xmlHttpRequest, textStatus, errorThrown) {
+                console.info(xmlHttpRequest);
+                console.info(textStatus);
+                console.info(errorThrown);
+                alert(textStatus);
+            }
+        })
+    }
+
+    /**
+     * 获取查询参数通用方法
+     */
+    var getQueryParam = function (){
+        var param = {
+            uname : $.trim($("#uname").val()),
+            idCard : $.trim($("#idCard").val()),
+            job : $.trim($("#job").val()),
+            bankAccount : $.trim($("#bankAccount").val()),
+            bankInfo : $.trim($("#bankInfo").val()),
+            telephoneNum : $.trim($("#telephoneNum").val())
+        };
+        return param;
+    }
+
+    //若val为undefined则返回为""
+    var oTos = function (val){
+        return val ? val: "";
+    }
+</script>
+</html>

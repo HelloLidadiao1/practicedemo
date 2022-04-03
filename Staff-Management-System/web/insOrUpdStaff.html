@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>员工管理系统</title>
+    <style type="text/css">
+        body{
+            background: url(images/hh_hh.jpg);
+            background-size: 600px;
+        }
+    </style>
+</head>
+<body>
+    <h1 align="center">员工管理系统</h1><br>
+    <form>
+        <input type="text" name="flag" id="flag" value="saveOrUpdStuff" hidden="hidden"/>
+        姓名：<input id="uname" type="text" name="uname"/>&nbsp;&nbsp;<select id="selectStaff"><option value="">切换用户</option></select><br>
+        身份证号：<input id="idCard" type="text" name="idCard"/>&nbsp;&nbsp;<br>
+        工种：<input id="job" type="text" name="job"/>&nbsp;&nbsp;<br>
+        银行账号：<input id="bankAccount" type="text" name="bankAccount"/>&nbsp;&nbsp;<br>
+        开户银行：<input id="bankInfo" type="text" name="bankInfo"/>&nbsp;&nbsp;<br>
+        电话号码：<input id="telephoneNum" type="text" name="telephoneNum"/>&nbsp;&nbsp;<br>
+        月份：<input id="months" type="text" name="months"/>&nbsp;&nbsp;<br>
+        年份：<input id="year" type="text" name="year"/>&nbsp;&nbsp;<br>
+        工资：<input id="wages" type="text" name="wages"/>&nbsp;&nbsp;<br>
+        <input type="reset" value="重置"/>&nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="button" id="saveOrUpdStuff" value="保存更新"/>&nbsp;&nbsp;&nbsp;&nbsp;
+        <input type="button" id="backIndex" value="返回首页"/>
+    </form>
+</body>
+<script type="text/javascript" src="js/jquery-1.9.1.js"></script>
+<script type="text/javascript">
+    $(function(){
+        var href = window.location.href;
+        var hrefMatch = href.match(/(?<=uid=)\d*/);
+        //获取地址栏上，带过来的uid
+        var uid = hrefMatch && hrefMatch[0];
+        //查询数据
+        var param = {
+            uid : uid
+        };
+        var successFuc = function(result){
+            if (result && result.code == 200){
+                var data = result.data;
+                if (data && data.length > 0){
+                    parseDataWriteForm(data[0]);
+                } else {
+                    if(uid){
+                        alert("查询员工信息为空！");
+                    }
+                }
+            } else {
+                alert(result.message);
+            }
+        }
+        var paramJson = JSON.stringify(param);
+        commomReq("/Staff_Management_System/staffServlet?flag=selStaffByUid", paramJson, successFuc);
+        // 绑定监听事件
+        bindEvent(uid);
+
+    });
+
+    var bindEvent = function (uid) {
+        $("#backIndex").click(function (){
+            window.location.href = "/Staff_Management_System/";
+        })
+        //初始化用户下拉选择框
+        initSelect();
+        $("#saveOrUpdStuff").click(function (){
+            var param = getParam();
+            if (!param.idCard || !param.bankAccount || !param.uname){
+                alert("身份证号、银行账号、用户名等信息不能为空，请检查！");
+                return;
+            }
+            param.uid = uid;
+            var paramJson = JSON.stringify(param);
+            $.ajax(
+                {
+                    url: "/Staff_Management_System/staffServlet?flag=saveOrUpdStuff", //访问路径
+                    type: "POST",    //访问方式
+                    // type: "GET",    //访问方式
+                    data: paramJson, // 发送到服务器的数据。将自动转换为请求字符串格式。
+                    dataType: "json",   //预期服务器返回的数据类型
+                    //processData: "true",//不希望将参数自动转换成url?filed1=val1&filed2=val2格式【达不到预期效果】
+                    // 发送信息至服务器时的内容编码，默认为：application/x-www-form-urlencoded，
+                    // 即以url?filed1=val1&filed2=val2的格式将参数拼接到url后的编码方式【注意区分，请求方式与编码格式无关】
+                    contentType: "application/json;charset=utf-8",
+                    //请求成功时的回调函数
+                    success : function(result){
+                        debugger
+                        if (result && result.code == 200){
+                            var data = result.data;
+                            if (data){
+                                alert("员工信息保存更新成功！");
+                            } else {
+                                alert("员工信息保存更新失败！");
+                            }
+                        } else {
+                            alert("操作失败，请联系系统管理员！");
+                        }
+                    },
+                    //请求失败时，调用此函数
+                    error : function (xmlHttpRequest, textStatus, errorThrown) {
+                        console.info(xmlHttpRequest);
+                        console.info(textStatus);
+                        console.info(errorThrown);
+                        alert(textStatus);
+                    }
+                }
+            );
+        });
+    }
+
+    /**
+     * 初始化用户下拉选择框
+     */
+    var initSelect = function (){
+        var param = getParam();
+        var paramJson = JSON.stringify(param);
+        var successFuc = function(result){
+            if (result && result.code == 200){
+                var data = result.data;
+                if (data && data.length > 0){
+                    parseDataWriteSelect(data);
+                } else {
+                    alert("查询员工信息为空！");
+                }
+            } else {
+                alert(result.message);
+            }
+        }
+
+        $("#selectStaff").change(function (){
+              debugger
+              var selVal = $.trim($(this).val());
+              window.location.href = "/Staff_Management_System/insOrUpdStaff.html?uid=" + selVal;
+        });
+        commomReq("/Staff_Management_System/staffServlet?flag=selStaff", paramJson, successFuc);
+    }
+
+    /**
+     *  通用发送后端请求方法
+     */
+    var commomReq = function (url, paramData, successFun){
+        $.ajax(
+            {
+                url: url , //访问路径
+                type: "POST",    //访问方式
+                data: paramData, // 发送到服务器的数据。将自动转换为请求字符串格式。
+                dataType: "json",   //预期服务器返回的数据类型
+                contentType: "application/json;charset=utf-8",
+                success : successFun,
+                //请求失败时，调用此函数
+                error : function (xmlHttpRequest, textStatus, errorThrown) {
+                    console.info(xmlHttpRequest);
+                    console.info(textStatus);
+                    console.info(errorThrown);
+                    alert(textStatus);
+                }
+            }
+        );
+    }
+
+    /**
+     * 获取参数值
+     */
+    var getParam = function (){
+        var param = {
+            uname : $.trim($("#uname").val()),
+            idCard : $.trim($("#idCard").val()),
+            job : $.trim($("#job").val()),
+            bankAccount : $.trim($("#bankAccount").val()),
+            bankInfo : $.trim($("#bankInfo").val()),
+            months : $.trim($("#months").val()),
+            year : $.trim($("#year").val()),
+            wages : $.trim($("#wages").val()),
+            telephoneNum : $.trim($("#telephoneNum").val())
+        };
+        return param;
+    }
+
+    //把查询结果回写到表格中
+    var parseDataWriteForm = function (item){
+        $("#uname").val(oTos(item.uname));
+        $("#idCard").val(oTos(item.idCard));
+        $("#job").val(oTos(item.job));
+        $("#bankAccount").val(oTos(item.bankAccount));
+        $("#bankInfo").val(oTos(item.bankInfo));
+        $("#telephoneNum").val(oTos(item.telephoneNum));
+        var now = new Date();
+        now.getFullYear();
+        $("#months").val(now.getFullYear());
+        $("#year").val(now.getMonth() + 1);
+    }
+
+    //把查询员工信息写入员工下拉控件
+    var parseDataWriteSelect = function (staffs){
+        var allOptionStr = "";
+        $.each(staffs, function (index, item){
+            allOptionStr += "<option value='" + item.uid + "'>"+ item.uname +"</option>";
+        });
+        $("#selectStaff").append(allOptionStr);
+    }
+
+    //若val为undefined则返回为""
+    var oTos = function (val){
+        return val ? val: "";
+    }
+
+</script>
+</html>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <settings>
+        <setting name="logImpl" value="LOG4J"/>
+        <!-- 开启驼峰映射：A_COLUMN -> aColumn-->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <!-- 默认值为：PARTIAL，只会自动映射没有定义嵌套结果映射的字段、FULL表示对所有的resultMap都进行自动映射、NONE表示不启用自动映射-->
+        <setting name="autoMappingBehavior" value="FULL"/>
+    </settings>
+    <typeAliases>
+        <package name="com.demo.pojo"/>
+    </typeAliases>
+    <!--<mappers>
+        <package name="com.demo.mapper"/>
+    </mappers>-->
+</configuration>
